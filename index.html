@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+  <title>White Noise</title>
+  <style>
+    body {
+      background-color: #333;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-size: 48px;
+      color: #FFFFFF;
+      margin-top: 50px;
+    }
+    p {
+      text-align: center;
+      font-size: 24px;
+      color: #FFFFFF;
+      margin-top: 20px;
+    }
+  </style>
+  <script>
+    let fft, noise, filter; 
+
+    function setup() { 
+      createCanvas(500, 500); 
+      pixelDensity(1); 
+
+      // Create a new white noise sound object 
+      noise = new p5.Noise('white'); 
+
+      // Create a new filter object 
+      filter = new p5.BandPass(); 
+
+      // Connect the noise object to the filter object 
+      noise.disconnect(); 
+      noise.connect(filter); 
+
+      // Start playing the noise 
+      noise.start(); 
+
+      // Create a new FFT object 
+      fft = new p5.FFT(); 
+    } 
+
+    function draw() { 
+      loadPixels(); 
+
+      // Loop over all pixels and set them to a random grayscale color 
+      for (let i = 0; i < pixels.length; i += 4) { 
+        let gray = floor(random(156)); 
+        pixels[i] = gray; // Red 
+        pixels[i+1] = gray; // Green 
+        pixels[i+2] = gray; // Blue 
+        pixels[i+3] = 255; // Alpha 
+      } 
+
+      updatePixels(); 
+
+      // Set the BandPass frequency based on mouseX 
+      let freq = map(mouseX, 0, width, 20, 10000); 
+      freq = constrain(freq, 0, 22050); 
+      filter.freq(freq); 
+
+      // Set the BandPass resonance based on the sound level 
+      let level = fft.getEnergy('mid'); 
+      let res = map(level, 0, 255, 0, 50); 
+      filter.res(res); 
+
+      // Draw filtered spectrum 
+      let spectrum = fft.analyze(); 
+      noStroke(); 
+      for (let i = 0; i < spectrum.length; i++) { 
+        let x = map(i, 0, spectrum.length, 0, width); 
+        let h = -height + map(spectrum[i], 0, 255, height, 0); 
+        rect(x, height, width/spectrum.length, h); 
+      } 
+    } 
+  </script>
+<link type="text/css" rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <h1>WHITE NOISE</h1>
+<script type="text/javascript" src="js/script.js"></script>
+</body>
+</html>
