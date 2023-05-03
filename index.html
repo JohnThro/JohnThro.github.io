@@ -13,7 +13,7 @@
       color: #FFFFFF;
       margin-top: 50px;
     }
-    p {
+    p, button {
       text-align: center;
       font-size: 24px;
       color: #FFFFFF;
@@ -24,6 +24,17 @@
       display: block;
       margin: 0 auto;
     }
+    button {
+      background-color: #555;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/addons/p5.sound.min.js"></script>
@@ -31,63 +42,78 @@
 </head>
 <body>
   <h1>WHITE NOISE</h1>
+  <button id="startBtn">Start</button>
   <script>
-    let fft, noise, filter; 
+    let fft, noise, filter;
+    let started = false;
 
-    function setup() { 
-      createCanvas(500, 500); 
-      pixelDensity(1); 
+    function setup() {
+      createCanvas(500, 500);
+      pixelDensity(1);
+      noLoop(); // Prevent the draw() function from looping until the user clicks the start button
 
-      // Create a new white noise sound object 
-      noise = new p5.Noise('white'); 
+      // Create a new white noise sound object
+      noise = new p5.Noise('white');
 
-      // Create a new filter object 
-      filter = new p5.BandPass(); 
+      // Create a new filter object
+      filter = new p5.BandPass();
 
-      // Connect the noise object to the filter object 
-      noise.disconnect(); 
-      noise.connect(filter); 
+      // Connect the noise object to the filter object
+      noise.disconnect();
+      noise.connect(filter);
 
-      // Start playing the noise 
-      noise.start(); 
+      // Create a new FFT object
+      fft = new p5.FFT();
+    }
 
-      // Create a new FFT object 
-      fft = new p5.FFT(); 
-    } 
+    function draw() {
+      if (!started) return;
 
-    function draw() { 
-      loadPixels(); 
+      loadPixels();
 
-      // Loop over all pixels and set them to a random grayscale color 
-      for (let i = 0; i < pixels.length; i += 4) { 
-        let gray = floor(random(156)); 
-        pixels[i] = gray; // Red 
-        pixels[i+1] = gray; // Green 
-        pixels[i+2] = gray; // Blue 
-        pixels[i+3] = 255; // Alpha 
-      } 
+      // Loop over all pixels and set them to a random grayscale color
+      for (let i = 0; i < pixels.length; i += 4) {
+        let gray = floor(random(156));
+        pixels[i] = gray; // Red
+        pixels[i+1] = gray; // Green
+        pixels[i+2] = gray; // Blue
+        pixels[i+3] = 255; // Alpha
+      }
 
-      updatePixels(); 
+      updatePixels();
 
-      // Set the BandPass frequency based on mouseX 
-      let freq = map(mouseX, 0, width, 20, 10000); 
-      freq = constrain(freq, 0, 22050); 
-      filter.freq(freq); 
+      // Set the BandPass frequency based on mouseX
+      let freq = map(mouseX, 0, width, 20, 10000);
+      freq = constrain(freq, 0, 22050);
+      filter.freq(freq);
 
-      // Set the BandPass resonance based on the sound level 
-      let level = fft.getEnergy('mid'); 
-      let res = map(level, 0, 255, 0, 50); 
-      filter.res(res); 
+      // Set the BandPass resonance based on the sound level
+      let level = fft.getEnergy('mid');
+      let res = map(level, 0, 255, 0, 50);
+      filter.res(res);
 
-      // Draw filtered spectrum 
-      let spectrum = fft.analyze(); 
-      noStroke(); 
-      for (let i = 0; i < spectrum.length; i++) { 
-        let x = map(i, 0, spectrum.length, 0, width); 
-        let h = -height + map(spectrum[i], 0, 255, height, 0); 
-        rect(x, height, width/spectrum.length, h); 
-      } 
-    } 
-  </script>
-</body>
+      // Draw filtered spectrum
+      let spectrum = fft.analyze();
+      noStroke();
+      for (let i = 0; i < spectrum.length; i++) {
+        let x = map(i, 0, spectrum.length, 0, width);
+        let h = -height + map(spectrum[i], 0, 255, height, 0);
+        rect(x, height, width/spectrum.length, h);
+      }
+    }
+    
+    // Function to start playing the noise when the button is clicked
+    function startNoise() {
+      if (!started) {
+        noise.start();
+        loop(); // Start looping the draw() function
+        started = true;
+      }
+    }
+
+    // Add a click event listener to the start button
+    document.getElementById("startBtn").addEventListener("click", startNoise);
+    
+    </script>
+  </body>
 </html>
